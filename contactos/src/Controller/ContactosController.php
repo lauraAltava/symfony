@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 use App\Entity\Contacto;
+use App\Entity\Provincia;
 use Doctrine\Persistence\ManagerRegistry;
-
+use Symfony\Bridge\Doctrine\ManagerRegistry as DoctrineManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -49,7 +50,7 @@ class ContactosController extends AbstractController
         $contacto = $repositorio->find($codigo);
 
         return $this->render('ficha_contacto.html.twig', [
-            'contacto => $contacto'
+            'contacto' => $contacto
         ]);
 
     }
@@ -106,11 +107,30 @@ class ContactosController extends AbstractController
             ]);
       
     }
+    #[Route('/contacto/insertarConProvincia', name: 'insertar_con_provincia_contacto')]
 
+    public function insertarConProvincia(ManagerRegistry $doctrine): Response{
+        $entityManager = $doctrine->getManager();
+        $provincia = new Provincia();
 
+        $provincia->setNombre("Alicante");
+        $contacto = new Contacto();
 
+        $contacto->setNombre("Insercion de una prueba con provincia");
+        $contacto->setTelefono("900220022");
+        $contacto->setEmail("Inserciion.de.prueba.provincia@contacto.es");
+        $contacto->setProvincia($provincia);
 
+        $entityManager->persist($provincia);
+        $entityManager->persist($contacto);
 
+        $entityManager->flush();
+        return $this->render('ficha_contacto.html.twig',[
+            'contacto' => $contacto
+        ]);
+        
+        
+    }
 
 
 }
