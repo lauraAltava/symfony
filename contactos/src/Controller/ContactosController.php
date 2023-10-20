@@ -9,6 +9,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Constraints\Regex;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\HttpFoundation\Request;
+use App\Form\ContactoType;
+
 
 class ContactosController extends AbstractController
 {
@@ -25,6 +32,59 @@ class ContactosController extends AbstractController
         9 => ["nombre" => "Nora Jover", "telefono" => "54565859", "email" => "norajover@ieselcaminas.org"]
 
     ]; 
+
+
+    #[Route('/contacto/nuevo', name: 'nuevo_contacto')]
+    public function nuevo(ManagerRegistry $doctrine, Request $request){
+        $contacto = new Contacto();
+
+        $formulario = $this->createForm(ContactoType::class, $contacto);
+
+   
+            $formulario->handleRequest($request);
+
+            if($formulario->isSubmitted() && $formulario->isValid()){
+                $contacto = $formulario->getData();
+                $entityManager = $doctrine->getManager();
+                $entityManager -> persist($contacto);
+                $entityManager->flush();
+                return $this->redirectToRoute('ficha_contacto', 
+                ["codigo" => $contacto->getId()]);
+            }
+        
+        return $this->render('contactos/nuevo.html.twig', array(
+            'formulario' => $formulario->createView()
+        ));
+    }
+
+    #[Route('/contacto/editar/{codigo}', name:"editar_contacto", 
+    requirements:["codigo"=>"\d+"])]
+
+    public function editar(ManagerRegistry $doctrine, Request $request,
+    $codigo){
+        $repositorio = $doctrine->getRepository(Contacto::class);
+        $contacto = $repositorio->find($codigo);
+
+        if($contacto){
+            $formulario = $this->createForm(ContactoType::class, $contacto);
+            $formulario->handleRequest($request);
+        }
+           
+
+            if($formulario->isSubmitted() && $formulario->isValid()){
+                $contacto = $formulario->getData();
+                $entityManager = $doctrine->getManager();
+                $entityManager -> persist($contacto);
+                $entityManager->flush();
+                return $this->redirectToRoute('ficha_contacto', 
+                ["codigo" => $contacto->getId()]);
+            }
+        
+        return $this->render('contactos/nuevo.html.twig', array(
+            'formulario' => $formulario->createView()
+        ));
+
+    }
 
     #[Route('/contacto/insertar', name: 'insertar_contacto')]
     public function insertar(ManagerRegistry $doctrine)
@@ -43,6 +103,32 @@ class ContactosController extends AbstractController
     }catch (\Exception $e){
         return new Response("Error insertando objetos" . $e->getMessage());
     }
+
+}
+#[Route('/contacto/insertarConProvincia', name: 'insertar_con_provincia_contacto')]
+
+public function insertarConProvincia(ManagerRegistry $doctrine): Response{
+    $entityManager = $doctrine->getManager();
+    $provincia = new Provincia();
+
+    $provincia->setNombre("Alicante");
+    $provincia->setNombre("Valencia");
+    $contacto = new Contacto();
+
+    $contacto->setNombre("Insercion de una prueba con provincia");
+    $contacto->setTelefono("900220022");
+    $contacto->setEmail("Insercion.de.prueba.provincia@contacto.es");
+    $contacto->setProvincia($provincia);
+
+    $entityManager->persist($provincia);
+    $entityManager->persist($contacto);
+
+    $entityManager->flush();
+    return $this->render('ficha_contacto.html.twig',[
+        'contacto' => $contacto
+    ]);
+    
+    
 }
     #[Route('/contacto/{codigo}', name: 'ficha_contacto')]
     public function ficha(ManagerRegistry $doctrine, $codigo): Response{
@@ -107,30 +193,7 @@ class ContactosController extends AbstractController
             ]);
       
     }
-    #[Route('/contacto/insertarConProvincia', name: 'insertar_con_provincia_contacto')]
 
-    public function insertarConProvincia(ManagerRegistry $doctrine): Response{
-        $entityManager = $doctrine->getManager();
-        $provincia = new Provincia();
-
-        $provincia->setNombre("Alicante");
-        $contacto = new Contacto();
-
-        $contacto->setNombre("Insercion de una prueba con provincia");
-        $contacto->setTelefono("900220022");
-        $contacto->setEmail("Inserciion.de.prueba.provincia@contacto.es");
-        $contacto->setProvincia($provincia);
-
-        $entityManager->persist($provincia);
-        $entityManager->persist($contacto);
-
-        $entityManager->flush();
-        return $this->render('ficha_contacto.html.twig',[
-            'contacto' => $contacto
-        ]);
-        
-        
-    }
 
 
 }
