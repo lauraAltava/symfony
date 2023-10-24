@@ -112,7 +112,7 @@ public function insertarConProvincia(ManagerRegistry $doctrine): Response{
     $provincia = new Provincia();
 
     $provincia->setNombre("Alicante");
-    $provincia->setNombre("Valencia");
+    $provincia->setNombre("Castellon");
     $contacto = new Contacto();
 
     $contacto->setNombre("Insercion de una prueba con provincia");
