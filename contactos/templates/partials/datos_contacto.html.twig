@@ -1,7 +1,8 @@
 
 <ul>
 
-    <li><strong>{{ contacto.nombre }}</strong></li>
+    
+    <a href="/contacto/{{contacto.id}}"><li><strong>{{ contacto.nombre }}</strong></a></li>
     
     <li><strong>Teléfono</strong>: {{ contacto.telefono }}</li>
 
@@ -10,7 +11,10 @@
     {% endif %}
     
     <li><strong>E-mail</strong>: {{ contacto.email }}</li>
-    <li><a href="/contacto/editar/{{contacto.id}}">Editar</a></li>
+    <a href="/contacto/editar/{{contacto.id}}">Editar</a>
+    <a href="/contacto/delete/{{contacto.id}}">Eliminar</a> 
+
+
 
 
 </ul>

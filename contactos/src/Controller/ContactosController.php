@@ -15,7 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\ContactoType;
-
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ContactosController extends AbstractController
 {
@@ -60,8 +60,11 @@ class ContactosController extends AbstractController
     #[Route('/contacto/editar/{codigo}', name:"editar_contacto", 
     requirements:["codigo"=>"\d+"])]
 
-    public function editar(ManagerRegistry $doctrine, Request $request,
+    public function editar(ManagerRegistry $doctrine, Request $request, SessionInterface $session, 
     $codigo){
+        $user = $this->getUser();
+        
+        if ($user){
         $repositorio = $doctrine->getRepository(Contacto::class);
         $contacto = $repositorio->find($codigo);
 
@@ -81,11 +84,17 @@ class ContactosController extends AbstractController
             }
         
         return $this->render('contactos/nuevo.html.twig', array(
-            'formulario' => $formulario->createView()
-        ));
+            'formulario' => $formulario->createView()));
+        
 
-    }
+        }else{
 
+            $url=$this->generateUrl('editar_contacto', ['codigo' => $codigo]);
+
+            $session->set('enlace', $url);
+            return $this->redirectToRoute('app_login');
+        }
+}
     #[Route('/contacto/insertar', name: 'insertar_contacto')]
     public function insertar(ManagerRegistry $doctrine)
 {
@@ -175,7 +184,10 @@ public function insertarConProvincia(ManagerRegistry $doctrine): Response{
 
     #[Route('/contacto/delete/{id}', name: 'eliminar_contacto')]
 
-    public function delete(ManagerRegistry $doctrine, $id): Response{
+    public function delete(ManagerRegistry $doctrine, $id, SessionInterface $session): Response{
+        $user = $this->getUser();
+
+        if ($user){
         $entityManager = $doctrine->getManager();
         $repositorio = $doctrine->getRepository(Contacto::class);
         $contacto = $repositorio->find($id);
@@ -191,7 +203,12 @@ public function insertarConProvincia(ManagerRegistry $doctrine): Response{
             return $this->render('ficha_contacto.html.twig', [
                 'contacto' => null
             ]);
-      
+        }else{
+            $url=$this->generateUrl(
+                'eliminar_contacto', ['id' => $id]);
+            $session->set('enlace', $url);
+            return $this->redirectToRoute('app_login');
+        }
     }
 
 
