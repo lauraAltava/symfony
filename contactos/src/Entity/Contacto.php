@@ -62,6 +62,9 @@ class Contacto
 
     private ?Provincia $provincia = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $file = null;
+
 
 
     public function getId(): ?int
@@ -166,6 +169,18 @@ class Contacto
 
         return $this;
 
+    }
+
+    public function getFile(): ?string
+    {
+        return $this->file;
+    }
+
+    public function setFile(string $file): static
+    {
+        $this->file = $file;
+
+        return $this;
     }
 
 }

@@ -4,6 +4,7 @@
     <h1>Ficha del contacto</h1>
     {% if contacto %}
     {{ include ('partials/datos_contacto.html.twig', { 'contacto': contacto }) }}
+    <img src="{{ asset("/images/"~ contacto.file) }}"/>
     {% else %}
         <p> Contacto no encontrado</p>
     {% endif %}

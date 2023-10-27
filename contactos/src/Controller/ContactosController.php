@@ -16,6 +16,10 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\ContactoType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ContactosController extends AbstractController
 {
@@ -61,7 +65,7 @@ class ContactosController extends AbstractController
     requirements:["codigo"=>"\d+"])]
 
     public function editar(ManagerRegistry $doctrine, Request $request, SessionInterface $session, 
-    $codigo){
+    $codigo, SluggerInterface $slugger){
         $user = $this->getUser();
         
         if ($user){
@@ -74,15 +78,32 @@ class ContactosController extends AbstractController
         }
            
 
-            if($formulario->isSubmitted() && $formulario->isValid()){
-                $contacto = $formulario->getData();
-                $entityManager = $doctrine->getManager();
-                $entityManager -> persist($contacto);
-                $entityManager->flush();
-                return $this->redirectToRoute('ficha_contacto', 
-                ["codigo" => $contacto->getId()]);
-            }
+        if ($formulario->isSubmitted() && $formulario->isValid()) {
+            $contacto = $formulario->getData();
+            $file = $formulario->get('file')->getData();
+            if ($file) {
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                // this is needed to safely include the file name as part of the URL
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$file->guessExtension();
         
+                // Move the file to the directory where images are stored
+                try {
+        
+                    $file->move(
+                        $this->getParameter('images_directory'), $newFilename
+                    );
+                   
+                } catch (FileException $e) {
+                   
+                }
+                $contacto->setFile($newFilename);
+            }
+               
+            $entityManager = $doctrine->getManager();    
+            $entityManager->persist($contacto);
+            $entityManager->flush();
+        }
         return $this->render('contactos/nuevo.html.twig', array(
             'formulario' => $formulario->createView()));
         
@@ -90,7 +111,6 @@ class ContactosController extends AbstractController
         }else{
 
             $url=$this->generateUrl('editar_contacto', ['codigo' => $codigo]);
-
             $session->set('enlace', $url);
             return $this->redirectToRoute('app_login');
         }

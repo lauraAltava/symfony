@@ -48,7 +48,10 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
         $pagina = $session->get('enlace');
 
         // For example:
-        return new RedirectResponse($pagina);
+        if ($pagina != null && $pagina != ""){
+            return new RedirectResponse($pagina);
+        }
+        return new RedirectResponse($this->urlGenerator->generate('inicio'));
         throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
     }
 
